@@ -1,5 +1,6 @@
 from pathlib import Path
 
-ROOT_PATH = Path("/data/parkce")
-IMG_PATH = Path("data/visual_genome/VG_100K_all")
-CAPTION_PATH = Path('data/etri/core')
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATASET_DIR = PROJECT_ROOT / "dataset"
+IMG_DIR = DATASET_DIR / "visual_genome" / "VG_100K_all"
+CAPTION_DIR = DATASET_DIR / "etri" / "core"
