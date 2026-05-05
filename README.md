@@ -17,31 +17,22 @@ To install the necessary dependencies for LACE-Bench, please follow these steps:
    ```
 
 ## Dataset
-All data lives under `dataset/` in the project root.
+All data lives under `dataset/` in the project root. A single command pulls and prepares everything:
 
-### Visual Genome
-```bash
-BASE="dataset/visual_genome"
-TARGET="$BASE/VG_100K_all"
-mkdir -p "$TARGET"
-
-wget -P "$BASE" https://cs.stanford.edu/people/rak248/VG_100K_2/images.zip
-wget -P "$BASE" https://cs.stanford.edu/people/rak248/VG_100K_2/images2.zip
-
-unzip -q "$BASE/images.zip"  -d "$TARGET"/
-unzip -q "$BASE/images2.zip" -d "$TARGET"/
-
-ls "$TARGET" | head
-```
-
-### LACE data
-Download the captions from the [LACE-Bench HuggingFace dataset](https://huggingface.co/datasets/lacebench/LACE-Bench)
-and convert them to the layout the loaders expect:
 ```bash
 python scripts/download_data.py
 ```
-This populates `dataset/lacebench/` with per-image JSON files, `lace_test.json`, and the
-keyword dictionaries used for knowledge-editing evaluation.
+
+This downloads:
+- **Visual Genome v1 + v2** images from `cs.stanford.edu/people/rak248/VG_100K_2/`,
+  merged flat into `dataset/visual_genome/VG_100K_all/<image_id>.jpg`.
+- **LACE-Bench captions** from the
+  [HuggingFace dataset](https://huggingface.co/datasets/lacebench/LACE-Bench),
+  converted into `dataset/lacebench/{train,test}/<image_id>.json`,
+  `lace_test.json`, and the keyword dictionaries used for knowledge-editing eval.
+
+Pass `--skip-images` or `--skip-captions` to download only one half. Existing zips and
+extracted files are skipped on re-run.
 
 ## Usage
 Train and evaluation share a single entry point with subcommands:
