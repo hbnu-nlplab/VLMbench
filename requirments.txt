@@ -10,7 +10,11 @@ evaluate
 scikit-learn
 spacy
 torchmetrics
-qwen_vl_utils
+datasets
+huggingface_hub
+trl
+nltk
+bert_score
 vllm
 
 # python3 -m spacy download en_core_web_sm

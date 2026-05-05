@@ -32,19 +32,12 @@ ADAPTER_PATH = f"./outputs/{MODEL_NAME}_LRGR_bbox/checkpoint-candi-1/"
 USE_VLLM = False
 BATCH_SIZE = 1
 
-KCC = False
 INCLUDE_BBOX = True
 KNOWLEDGE_EDIT = False
 USE_CF_KE = False
 QUAL_ANAL = False
 EACH_BBOX = False
 TASK_B = False
-
-if KCC:
-    INCLUDE_BBOX = False
-    KNOWLEDGE_EDIT = True
-    EACH_BBOX = False
-    TASK_B = False
 # ----------------------------------------------------
 
 
@@ -125,8 +118,6 @@ def main():
         with open(str(CAPTION_DIR / "lace_test.json"), "r") as f:
             eval_data_raw = json.load(f)
         eval_data = [{img_id: eval_data_raw[img_id]} for img_id in QUAL_ANAL_IMAGE_IDS]
-    elif KCC:
-        eval_data = get_each_json(sorted(glob.glob(str(CAPTION_DIR / 'kcc/raw/*json'))))
     else:
         eval_data = get_each_json(sorted(glob.glob(str(CAPTION_DIR / 'test/*json'))))
 
