@@ -101,13 +101,17 @@ def _build_keyword_dict(records):
     out = {}
     for r in records:
         for kw in r.get("keywords") or []:
-            cf = kw.get("counterfactual") if isinstance(kw, dict) else None
-            if not cf:
+            if not isinstance(kw, dict):
                 continue
-            name = cf.get("human_annotation")
-            cands = cf.get("candidate") or []
-            if name:
-                out.setdefault(name, []).extend(cands)
+            cf = kw.get("counterfactual")
+            cf_entries = cf if isinstance(cf, list) else [cf] if isinstance(cf, dict) else []
+            for entry in cf_entries:
+                if not isinstance(entry, dict):
+                    continue
+                name = entry.get("human_annotation")
+                cands = entry.get("candidate") or []
+                if name:
+                    out.setdefault(name, []).extend(cands)
     return {k: sorted(set(v)) for k, v in out.items()}
 
 
