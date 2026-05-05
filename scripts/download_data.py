@@ -25,6 +25,7 @@ from pathlib import Path
 # Ensure the project root is importable when run as `python scripts/download_data.py`.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from datasets import load_dataset  # noqa: E402
 from tqdm import tqdm  # noqa: E402
 
 from lacebench import CAPTION_DIR, IMG_DIR  # noqa: E402
@@ -111,8 +112,6 @@ def _build_keyword_dict(records):
 
 
 def download_captions():
-    from datasets import load_dataset
-
     CAPTION_DIR.mkdir(parents=True, exist_ok=True)
 
     print(f"[captions] loading {HF_REPO} from HuggingFace ...")

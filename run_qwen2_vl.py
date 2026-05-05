@@ -19,8 +19,23 @@ import time
 os.environ.setdefault("WANDB_DISABLED", "true")
 
 import torch
+import transformers
+from datasets import Dataset
+from peft import LoraConfig, PeftModel, get_peft_model
 from PIL import Image
+from qwen_vl_utils import process_vision_info
 from tqdm import tqdm
+from transformers import (
+    AutoProcessor,
+    BitsAndBytesConfig,
+    Qwen2_5_VLForConditionalGeneration,
+    Qwen2VLForConditionalGeneration,
+    Qwen2VLProcessor,
+    set_seed,
+)
+from transformers.trainer_utils import get_last_checkpoint
+from transformers.utils.versions import require_version
+from trl import SFTConfig, SFTTrainer
 
 from lacebench import CAPTION_DIR, IMG_DIR
 from lacebench.chat import (
@@ -50,7 +65,6 @@ def _setup_logging():
 
 def _build_labels(input_ids, processor):
     """Replace pad and image tokens with -100 so they're ignored in the LM loss."""
-    from transformers import Qwen2VLProcessor
     labels = input_ids.clone()
     labels[labels == processor.tokenizer.pad_token_id] = -100
     if isinstance(processor, Qwen2VLProcessor):
@@ -100,16 +114,6 @@ def _clear_memory():
 
 
 def train(args):
-    import transformers
-    from transformers import (
-        AutoProcessor, BitsAndBytesConfig, Qwen2VLForConditionalGeneration, set_seed,
-    )
-    from transformers.trainer_utils import get_last_checkpoint
-    from transformers.utils.versions import require_version
-    from peft import LoraConfig, get_peft_model, PeftModel
-    from datasets import Dataset
-    from trl import SFTConfig, SFTTrainer
-
     require_version("datasets>=1.8.0",
                     "To fix: pip install -r examples/pytorch/contrastive-image-text/requirements.txt")
 
@@ -249,7 +253,6 @@ def train(args):
             return {"texts": [processor.apply_chat_template(c, tokenize=False) for c in convs]}
 
         def transform_images_map(examples):
-            from qwen_vl_utils import process_vision_info
             convs = [format_data(cap, img) for cap, img in zip(examples[CAP_COL], examples[IMG_COL])]
             for conv, bbox in zip(convs, examples[BBOX_COL]):
                 image = Image.open(conv[1]["content"][0]["image"]).convert("RGB")
@@ -286,8 +289,6 @@ def train(args):
             batch["labels"] = _build_labels(batch["input_ids"], processor)
             return batch
     else:
-        from qwen_vl_utils import process_vision_info
-
         def collate_fn(examples):
             batch = processor(
                 text=[processor.apply_chat_template(ex, tokenize=False) for ex in examples],
@@ -330,8 +331,6 @@ def _result_filename(args):
 
 
 def evaluate(args):
-    from transformers import Qwen2VLForConditionalGeneration, Qwen2VLProcessor
-
     _setup_logging()
     logger.info("Load data")
 
@@ -381,11 +380,7 @@ def evaluate(args):
         for d in vl_lst
     ]
 
-    if "2.5" in args.model_name_or_path:
-        from transformers import Qwen2_5_VLForConditionalGeneration
-        llm_cls = Qwen2_5_VLForConditionalGeneration
-    else:
-        llm_cls = Qwen2VLForConditionalGeneration
+    llm_cls = Qwen2_5_VLForConditionalGeneration if "2.5" in args.model_name_or_path else Qwen2VLForConditionalGeneration
 
     model = llm_cls.from_pretrained(
         args.model_name_or_path, device_map="auto", torch_dtype=torch.bfloat16,
@@ -393,7 +388,6 @@ def evaluate(args):
     processor = Qwen2VLProcessor.from_pretrained(args.model_name_or_path)
 
     if args.adapter_path:
-        from peft import PeftModel
         print(args.adapter_path)
         model = PeftModel.from_pretrained(model, args.adapter_path)
 

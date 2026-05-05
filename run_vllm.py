@@ -8,6 +8,7 @@ import torch
 from peft import PeftModel
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoModelForVision2Seq, AutoProcessor
+from vllm import LLM
 
 from lacebench import CAPTION_DIR
 from lacebench.chat import (
@@ -65,7 +66,6 @@ def format_data(data, prompt=PROMPT, processor=None, model_name=MODEL_NAME):
 
 def load_model(model_name: str, use_vllm=False):
     if use_vllm:
-        from vllm import LLM
         return LLM(model=model_name, tensor_parallel_size=1), None
 
     try:
